@@ -1,7 +1,7 @@
 # analise-algoritmo
 
 <a href="https://docs.google.com/document/d/1gAHpcYxgl8Jwd9g_LKOc4zrBrZBYkzUF-AqN1a5lEeo/edit?usp=sharing">
-      <img src="https://img.shields.io/badge/Relatorio_IA_Checkpoint 3-blue?style=for-the-badge&logo=google-docs&logoColor=white" />
+      <img src="https://img.shields.io/badge/Relatorio_IA-blue?style=for-the-badge&logo=google-docs&logoColor=white" />
 </a>
 
 Implementações de **Quickselect** (pivô aleatório) e **Mediana das Medianas**

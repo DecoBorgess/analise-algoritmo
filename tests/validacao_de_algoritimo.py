@@ -1,6 +1,9 @@
 """Testa as implementações em C e Python contra sorted().
 
 Uso (a partir da raiz do repositório): python3 tests/teste.py
+
+seve apenas para ver se os algoritimos estão corretos e se estão dando o mesmo resultado nas liguagens diferentes para a mesma entrada
+
 """
 import os
 import random
