@@ -1,3 +1,4 @@
+
 import random
 import struct
 from array import array
@@ -6,8 +7,8 @@ import os
 
 TAMANHOS = [
     1_000,
-    5_000,
-    10_000,
+    7_500,
+    25_000,
     100_000,
     500_000,
     1_000_000
