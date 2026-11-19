@@ -1,3 +1,4 @@
 c/main
 __pycache__/
 *.pyc
+datasets/*.bin

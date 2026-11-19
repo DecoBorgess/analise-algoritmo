@@ -54,7 +54,11 @@ for n in [1, 2, 3, 5, 6, 7, 10, 11, 100, 1001, 20000]:
         esperado = sorted(v)
 
         for k in {1, n, (n + 1) // 2, random.randint(1, n)}:
-            for alg in ("quickselect", "mom"):
+            for alg, extras in (
+                ("quickselect", ["pivo=aleatorio", "reps=2"]),
+                ("quickselect", ["pivo=ultimo", "reps=2"]),
+                ("mom", ["reps=2"]),
+            ):
                 for prog in programas:
 
                     if prog[0] == sys.executable and n > 1001:
@@ -63,7 +67,7 @@ for n in [1, 2, 3, 5, 6, 7, 10, 11, 100, 1001, 20000]:
                     total += 1
 
                     saida = subprocess.run(
-                        prog + [entrada, str(k), alg],
+                        prog + [entrada, str(k), alg] + extras,
                         capture_output=True,
                         text=True
                     )
@@ -79,7 +83,7 @@ for n in [1, 2, 3, 5, 6, 7, 10, 11, 100, 1001, 20000]:
                         falhas += 1
                         print(
                             f"FALHA {nome} n={n} k={k} "
-                            f"{alg} {prog[0]}: "
+                            f"{alg} {extras} {prog[0]}: "
                             f"{obtido} != {esperado[k - 1]}"
                         )
 

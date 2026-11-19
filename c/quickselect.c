@@ -9,11 +9,13 @@ static inline uint64_t xorshift64(void) {
     return rng_state;
 }
 
-i64 quickselect(i64 *a, size_t n, size_t k) {
+i64 quickselect(i64 *a, size_t n, size_t k, pivo_modo_t modo) {
     size_t lo = 0, hi = n - 1;
     for (;;) {
         if (lo == hi) return a[lo];
-        i64 pivot = a[lo + xorshift64() % (hi - lo + 1)];
+        i64 pivot = (modo == PIVO_ULTIMO)
+                  ? a[hi]
+                  : a[lo + xorshift64() % (hi - lo + 1)];
         size_t lt, gt;
         partition3(a, lo, hi, pivot, &lt, &gt);
         if (k < lt)       hi = lt - 1;
