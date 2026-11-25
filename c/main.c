@@ -21,6 +21,29 @@
 #include "median_of_medians.h"
 #include "quickselect.h"
 
+#ifdef MEM_TRACK
+
+#define PINTURA_PALAVRAS 8192
+#define PADRAO 0xAAAAAAAAAAAAAAAAULL
+
+size_t mem_depth = 0, mem_depth_max = 0;
+
+#pragma GCC diagnostic ignored "-Wdangling-pointer"
+static volatile uint64_t *volatile pintura_base;
+
+static __attribute__((noinline)) void pintar_pilha(void) {
+    volatile uint64_t buf[PINTURA_PALAVRAS];
+    for (size_t i = 0; i < PINTURA_PALAVRAS; i++) buf[i] = PADRAO;
+    pintura_base = buf; 
+}
+
+static size_t pilha_usada(volatile uint64_t *baixo) {
+    size_t i = 0;
+    while (i < PINTURA_PALAVRAS && baixo[i] == PADRAO) i++;
+    return (PINTURA_PALAVRAS - i) * sizeof(uint64_t);
+}
+#endif
+
 static i64 *ler_entrada(const char *path, size_t *n_out) {
     FILE *f = fopen(path, "rb");
 
@@ -133,16 +156,28 @@ int main(int argc, char **argv) {
 
     i64 r = 0;
     double soma = 0;
+#ifdef MEM_TRACK
+    size_t pico_pilha = 0;
+#endif
 
     for (size_t rep = 0; rep < reps; rep++) {
         memcpy(trabalho, a, n * sizeof *a);
 
         struct timespec t0, t1;
+#ifdef MEM_TRACK
+        pintar_pilha();
+#endif
 
         clock_gettime(CLOCK_MONOTONIC, &t0);
         i64 atual = usa_mom ? median_of_medians(trabalho, n, k - 1)
                             : quickselect(trabalho, n, k - 1, modo);
         clock_gettime(CLOCK_MONOTONIC, &t1);
+#ifdef MEM_TRACK
+        {
+            size_t u = pilha_usada(pintura_base);
+            if (u > pico_pilha) pico_pilha = u;
+        }
+#endif
 
         if (rep == 0) {
             r = atual;
@@ -176,6 +211,10 @@ int main(int argc, char **argv) {
     }
 
     printf("\n================================\n");
+#ifdef MEM_TRACK
+    printf("PILHA_BYTES: %zu\n", pico_pilha);
+    printf("PROFUNDIDADE: %zu\n", mem_depth_max);
+#endif
 
     free(a);
     free(trabalho);

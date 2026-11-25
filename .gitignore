@@ -1,4 +1,5 @@
 c/main
+c/main_mem
 __pycache__/
 *.pyc
 datasets/*.bin

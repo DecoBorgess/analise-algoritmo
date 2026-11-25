@@ -6,15 +6,23 @@
 
 typedef int64_t i64;
 
+
+#ifdef MEM_TRACK
+extern size_t mem_depth, mem_depth_max;
+#define MEM_ENTER() do { if (++mem_depth > mem_depth_max) mem_depth_max = mem_depth; } while (0)
+#define MEM_RET(v) do { i64 _r = (v); mem_depth--; return _r; } while (0)
+#else
+#define MEM_ENTER() ((void)0)
+#define MEM_RET(v) return (v)
+#endif
+
 static inline void swap(i64 *a, i64 *b) {
     i64 t = *a;
     *a = *b;
     *b = t;
 }
 
-/* Partição em 3 vias (menores | iguais | maiores) de a[lo..hi] (inclusivo)
- * em torno de `pivot`, que deve ser um valor presente no intervalo.
- * Devolve em *out_lt / *out_gt os limites da faixa de iguais. */
+
 static inline void partition3(i64 *a, size_t lo, size_t hi, i64 pivot,
                               size_t *out_lt, size_t *out_gt) {
     size_t lt = lo, i = lo, gt = hi;
@@ -33,7 +41,7 @@ static inline void partition3(i64 *a, size_t lo, size_t hi, i64 pivot,
     *out_gt = gt;
 }
 
-/* Ordena a[lo..hi] (inclusivo); usado só em trechos minúsculos. */
+
 static inline void insertion_sort(i64 *a, size_t lo, size_t hi) {
     for (size_t i = lo + 1; i <= hi; i++) {
         i64 key = a[i];

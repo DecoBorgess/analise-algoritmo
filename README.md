@@ -6,7 +6,7 @@
 
 Seleção do k-ésimo menor elemento: **Quickselect** (O(n) médio, O(n²) pior) e
 **Mediana das Medianas** (BFPRT, O(n) garantido), em **C** e **Python**, com
-análise experimental de tempo.
+análise experimental de tempo e de memória.
 
 ## Alterações recentes (adequação às specs do projeto)
 
@@ -17,7 +17,8 @@ análise experimental de tempo.
 - **Análise** (`experiments/analise.py`): média, desvio-padrão e razões T/n e T/n² em `summary.csv`, e 5 gráficos em `graphs/` (os gráficos antigos foram removidos por virem de outra metodologia).
 - **Testes** passam a cobrir os dois modos de pivô e `reps`.
 - Configuração central em `experiments/config.py`; `datasets/*.bin` ficam fora do git (regeneráveis pela semente).
-- Ainda não feito: ambiente de execução, comparação teoria × medições e relatório (ficam para o relatório).
+- **Ponto extra (memória):** análise de espaço auxiliar em C (pilha por pintura + profundidade de recursão, via `c/main_mem`) e Python (`tracemalloc`), com ajuste a + b·log₂ n e gráficos em escala log. Detalhes e texto para o relatório em `RELATORIO_MEMORIA.md`.
+- Ainda não feito: ambiente de execução (hardware/SO/versões) no relatório.
 
 ## Estrutura
 
@@ -30,9 +31,14 @@ experiments/
   gerar_entradas.py      gera datasets/ com semente fixa
   benchmark.py           roda as implementações e grava results.csv
   analise.py             média, desvio-padrão, razões e gráficos
+  memory_python.py       mede o pico de alocações do Python (tracemalloc)
+  memory_analysis.py     memória de C e Python -> memory_results.csv, memory_summary.csv, graphs/memoria_*.png
+  memory_results.csv     pico de pilha (C) / alocações (Python) por cenário, variante e n
+  memory_summary.csv     ajustes a + b·log₂ n e a + b·n por série
   results.csv            todos os tempos medidos
   summary.csv            média / desvio por (cenário, linguagem, variante, n)
-graphs/                  5 gráficos gerados por analise.py
+graphs/                  5 gráficos de tempo (analise.py) + 6 de memória (memory_analysis.py)
+RELATORIO_MEMORIA.md     análise de complexidade de memória (teoria, método, resultados)
 tests/validacao_de_algoritimo.py   corretude contra sorted()
 ```
 
@@ -50,6 +56,21 @@ python3 experiments/analise.py             # 4. summary.csv + graphs/*.png
 `benchmark.py [N]` aceita outro número de repetições (ex.: `3` para um teste
 rápido). O passo 3 leva alguns minutos, a maior parte no pior caso em Python.
 Ele para com erro se alguma resposta divergir de `sorted()[k-1]`.
+
+## Análise de memória (ponto extra)
+
+```bash
+python3 experiments/memory_analysis.py          # mede C e Python (Python é lento: tracemalloc)
+python3 experiments/memory_analysis.py --so-c   # remede só C e reaproveita as linhas de Python
+```
+
+Não precisa de valgrind. O script compila `c/main` (tempos) e `c/main_mem`
+(`-DMEM_TRACK`: pilha por pintura e profundidade de recursão), confere com
+`nm -u` que os algoritmos não usam heap e gera `memory_results.csv`,
+`memory_summary.csv` e `graphs/memoria_{stack_c,python}_<cenario>.png`.
+Resumo: quickselect usa O(1) de espaço auxiliar (24 B de pilha em C para
+qualquer n); mediana das medianas usa O(log n) (profundidade ≈ 2·log₅ n,
+408 B → 792 B de n = 1 mil a 1,024 milhão). Veja `RELATORIO_MEMORIA.md`.
 
 ## Cenários, casos e tamanhos
 
@@ -92,6 +113,14 @@ gcc -O2 -std=c11 -D_POSIX_C_SOURCE=200809L -o c/main c/main.c c/quickselect.c c/
 
 ./c/main datasets/aleatorio_16000.bin 8000 quickselect pivo=ultimo reps=5   # C
 python3 python/main.py datasets/aleatorio_16000.bin 8000 mom                # Python
+```
+
+Para medir a pilha e a profundidade de recursão (ponto extra), compile com a
+instrumentação e rode normalmente; ela imprime `PILHA_BYTES` e `PROFUNDIDADE`:
+
+```bash
+gcc -O2 -std=c11 -D_POSIX_C_SOURCE=200809L -DMEM_TRACK -o c/main_mem c/main.c c/quickselect.c c/median_of_medians.c
+./c/main_mem datasets/aleatorio_16000.bin 8000 mom reps=1
 ```
 
 Argumentos: `<arquivo> <k> <quickselect|mom> [pivo=aleatorio|ultimo] [reps=N]`.
